@@ -16,27 +16,19 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import me.elias.unabshop.ui.theme.UnabShopTheme
 
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val  navController = rememberNavController()
-            val startDestination = "Login"
-            NavHost( navController, startDestination) {
-                composable( route = "Login") {
-                    LoginScreen()
+            UnabShopTheme {
+                NavigationApp()
 
-                }
-                composable( route = "Register") {
-                    RegisterScreen()
-
-                }
-                composable (route = "Home"){
-                    HomeScreen()
-
-                }
             }
+
+
+
 
         }
     }
