@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "976361064301",
+    "project_id": "unabshop-1ff7c",
+    "storage_bucket": "unabshop-1ff7c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:976361064301:android:934803fc33c2b20752bc64",
+        "android_client_info": {
+          "package_name": "me.elias.unabshop"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDq7HiCRL5GpHEdECOf_9_cZz57-0fL9wo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

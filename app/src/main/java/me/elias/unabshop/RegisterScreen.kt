@@ -1,14 +1,8 @@
 package me.elias.unabshop
 
+import android.app.Activity
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -16,36 +10,43 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 
 
-@Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegisterScreen(onClickBack : ()-> Unit = {}) {
+fun RegisterScreen(
+    onClickBack: () -> Unit = {},
+    onRegisterSuccess: () -> Unit = {}
+) {
+    val auth = Firebase.auth
+    val activity = LocalView.current.context as Activity
+
+    // Estados de los campos
+    var inputName by remember { mutableStateOf("") }
+    var inputEmail by remember { mutableStateOf("") }
+    var inputPassword by remember { mutableStateOf("") }
+    var inputConfirm by remember { mutableStateOf("") }
+    var registerError by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { },
+                title = {},
                 navigationIcon = {
                     IconButton(onClick = onClickBack) {
                         Icon(
@@ -66,7 +67,6 @@ fun RegisterScreen(onClickBack : ()-> Unit = {}) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Ícono de Usuario
             Image(
                 painter = painterResource(id = R.drawable.img_icon_unab),
                 contentDescription = "Usuario",
@@ -75,7 +75,6 @@ fun RegisterScreen(onClickBack : ()-> Unit = {}) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Título
             Text(
                 text = "Registro de Usuario",
                 fontSize = 24.sp,
@@ -85,28 +84,22 @@ fun RegisterScreen(onClickBack : ()-> Unit = {}) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Campo de Nombre
             OutlinedTextField(
-                value = "",
-                onValueChange = {},
+                value = inputName,
+                onValueChange = { inputName = it },
                 label = { Text("Nombre") },
-                leadingIcon = {
-                    Icon(imageVector = Icons.Default.Person, contentDescription = "Nombre")
-                },
+                leadingIcon = { Icon(Icons.Default.Person, contentDescription = "Nombre") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campo de Correo Electrónico
             OutlinedTextField(
-                value = "",
-                onValueChange = {},
+                value = inputEmail,
+                onValueChange = { inputEmail = it },
                 label = { Text("Correo Electrónico") },
-                leadingIcon = {
-                    Icon(imageVector = Icons.Default.Email, contentDescription = "Email")
-                },
+                leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
@@ -114,14 +107,11 @@ fun RegisterScreen(onClickBack : ()-> Unit = {}) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campo de Contraseña
             OutlinedTextField(
-                value = "",
-                onValueChange = {},
+                value = inputPassword,
+                onValueChange = { inputPassword = it },
                 label = { Text("Contraseña") },
-                leadingIcon = {
-                    Icon(imageVector = Icons.Default.Lock, contentDescription = "Contraseña")
-                },
+                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Contraseña") },
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 modifier = Modifier.fillMaxWidth(),
@@ -130,17 +120,11 @@ fun RegisterScreen(onClickBack : ()-> Unit = {}) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campo de Confirmar Contraseña
             OutlinedTextField(
-                value = "",
-                onValueChange = {},
+                value = inputConfirm,
+                onValueChange = { inputConfirm = it },
                 label = { Text("Confirmar Contraseña") },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Lock,
-                        contentDescription = "Confirmar Contraseña"
-                    )
-                },
+                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Confirmar Contraseña") },
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 modifier = Modifier.fillMaxWidth(),
@@ -149,21 +133,59 @@ fun RegisterScreen(onClickBack : ()-> Unit = {}) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Botón de Registro
+            if (registerError.isNotEmpty()) {
+                Text(text = registerError, color = Color.Red, fontSize = 14.sp)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
             Button(
-                onClick = {},
+                onClick = {
+                    // Validaciones simples
+                    if (inputEmail.isBlank() || inputPassword.isBlank() || inputConfirm.isBlank()) {
+                        registerError = "Por favor complete todos los campos."
+                        return@Button
+                    }
+                    if (inputPassword != inputConfirm) {
+                        registerError = "Las contraseñas no coinciden."
+                        return@Button
+                    }
+                    if (inputPassword.length < 6) {
+                        registerError = "La contraseña debe tener al menos 6 caracteres."
+                        return@Button
+                    }
+
+                    // Crear usuario en Firebase
+                    isLoading = true
+                    auth.createUserWithEmailAndPassword(inputEmail.trim(), inputPassword)
+                        .addOnCompleteListener(activity) { task ->
+                            isLoading = false
+                            if (task.isSuccessful) {
+                                // Si quieres guardar el nombre en el perfil:
+                                // val user = auth.currentUser
+                                // user?.updateProfile(UserProfileChangeRequest.Builder().setDisplayName(inputName).build())
+
+                                registerError = ""
+                                onRegisterSuccess()
+                            } else {
+                                registerError = task.exception?.localizedMessage ?: "Error al crear la cuenta"
+                            }
+                        }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9900))
             ) {
-                Text(
-                    text = "Registrarse",
-                    fontSize = 16.sp,
-                    color = Color.White
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp)
+                } else {
+                    Text("Registrarse", fontSize = 16.sp, color = Color.White)
+                }
             }
         }
     }
 }
+
+
+
